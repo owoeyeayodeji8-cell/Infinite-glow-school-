@@ -53,3 +53,5 @@ section[id]{scroll-margin-top:64px}
 @keyframes pop{from{transform:scale(0)} to{transform:scale(1)}}
 @keyframes zin{from{opacity:0;transform:scale(.9)} to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){*,*::after,*::before{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}.bar{transform:none}html{scroll-behavior:auto}}
+.gal img{transition:transform .5s}
+.gal:hover img,.gal:active img{transform:scale(1.08)}
