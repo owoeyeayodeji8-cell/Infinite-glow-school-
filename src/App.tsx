@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, FormEvent, ReactNode } from "react";
 import { GraduationCap, BookOpen, ShieldCheck, Camera, Heart, Smile, Building2, Sparkles, Wallet, UserCheck, Baby, Puzzle, Pencil, Clock, MessageCircle, Phone, Mail, MapPin, Menu, X, Check, Loader2, ChevronDown } from "lucide-react";
-import { SITE, NAV, CHIPS, ABOUT, PROGRAMS, WHY, VALUES, FAC, LETTER, SIGN } from "./data/constants";
+import { SITE, NAV, CHIPS, ABOUT, PROGRAMS, WHY, VALUES, FAC, GALLERY, GALLERY_PREVIEW, LETTER, SIGN } from "./data/constants";
 
 const CHIP_ICONS = [GraduationCap, BookOpen, ShieldCheck, Camera];
 const PROG_ICONS = [Baby, Puzzle, Pencil, GraduationCap, Clock];
@@ -160,13 +160,29 @@ function Why() {
   );
 }
 
-function Facilities() {
+function Facilities({ onOpen }: { onOpen: (s: string, a: string) => void }) {
+  const [all, setAll] = useState(false);
+  const list = all ? GALLERY : GALLERY.filter((g) => GALLERY_PREVIEW.includes(g[0]));
+  const toggle = () => { if (all) document.getElementById("facilities")?.scrollIntoView({ behavior: "smooth" }); setAll(!all); };
   return (
     <Section id="facilities" bg="bg-white">
-      <Head t="Our Facilities" />
-      <div className="grid items-center gap-10 lg:grid-cols-2">
-        <Reveal><img src="/images/playground.jpg" alt="Play area with artificial turf, trampoline and slide" width={1280} height={960} loading="lazy" className="w-full rounded-3xl object-cover shadow-xl" /></Reveal>
-        <Reveal k="right"><ul className="space-y-4">{FAC.map((f) => <li key={f} className="flex items-center gap-3 text-lg font-semibold text-navy"><span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-orange text-white"><Check size={20} /></span>{f}</li>)}</ul></Reveal>
+      <Head t="Our Facilities" sub="A look around our school, from the gate to the classroom." />
+      <Reveal><ul className="mb-10 flex flex-wrap gap-3">{FAC.map((f) => <li key={f} className="flex items-center gap-2 rounded-full bg-sky px-4 py-2 font-semibold text-navy"><span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-orange text-white"><Check size={16} /></span>{f}</li>)}</ul></Reveal>
+      <div id="gallery" className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
+        {list.map(([s, c, al, pos], i) => (
+          <Reveal key={s} k="zoom" d={(i % 3) * 100}>
+            <button type="button" onClick={() => onOpen(s, al)} aria-label={`Open larger: ${c}`} className="gal relative block w-full overflow-hidden rounded-2xl shadow-lg">
+              <img src={s} alt={al} width={1200} height={900} loading="lazy" className="aspect-[4/3] w-full object-cover" style={{ objectPosition: pos }} />
+              <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-navy/90 to-transparent p-3 text-left text-sm font-semibold text-white sm:p-4 sm:text-base">{c}</span>
+            </button>
+          </Reveal>
+        ))}
+      </div>
+      <div className="mt-10 flex justify-center">
+        <button type="button" onClick={toggle} aria-expanded={all} aria-controls="gallery" className="btn bg-navy px-8 text-white">
+          {all ? "Show fewer photos" : `See all ${GALLERY.length} photos`}
+          <ChevronDown size={20} className={`transition-transform duration-300 ${all ? "rotate-180" : ""}`} />
+        </button>
       </div>
     </Section>
   );
@@ -177,13 +193,13 @@ const FLYERS = [
   ["/images/flyer-admission-backpack.jpg", "Admissions open flyer with reasons to choose Infinite Glow Schools", "tilt-r", 761, 1080],
 ] as const;
 
-function Admissions({ onOpen }: { onOpen: (s: string) => void }) {
+function Admissions({ onOpen }: { onOpen: (s: string, a: string) => void }) {
   return (
     <Section id="admissions" bg="bg-navy">
       <Head light t="Admissions Are Ongoing" sub="Available for Crèche, Nursery and Primary. Visit us or message us to secure a place." />
       <div className="mx-auto grid max-w-3xl grid-cols-2 items-start gap-4 sm:gap-8">
         {FLYERS.map(([s, a, t, w, h], i) => (
-          <Reveal key={s} d={i * 120}><button type="button" onClick={() => onOpen(s)} aria-label={`Open larger: ${a}`} className={`flyer ${t} block w-full overflow-hidden rounded-2xl border-4 border-white shadow-2xl`}><img src={s} alt={a} width={w} height={h} loading="lazy" className="w-full" /></button></Reveal>
+          <Reveal key={s} d={i * 120}><button type="button" onClick={() => onOpen(s, a)} aria-label={`Open larger: ${a}`} className={`flyer ${t} block w-full overflow-hidden rounded-2xl border-4 border-white shadow-2xl`}><img src={s} alt={a} width={w} height={h} loading="lazy" className="w-full" /></button></Reveal>
         ))}
       </div>
       <Reveal className="mt-10"><div className="flex flex-col justify-center gap-3 sm:flex-row">
@@ -194,7 +210,7 @@ function Admissions({ onOpen }: { onOpen: (s: string) => void }) {
   );
 }
 
-function Lightbox({ src, onClose }: { src: string; onClose: () => void }) {
+function Lightbox({ src, alt, onClose }: { src: string; alt: string; onClose: () => void }) {
   const btn = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     btn.current?.focus();
@@ -205,9 +221,9 @@ function Lightbox({ src, onClose }: { src: string; onClose: () => void }) {
     return () => { window.removeEventListener("keydown", k); document.body.style.overflow = o; };
   }, [onClose]);
   return (
-    <div role="dialog" aria-modal="true" aria-label="Admission flyer" className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4" onClick={onClose}>
+    <div role="dialog" aria-modal="true" aria-label="Enlarged photo" className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4" onClick={onClose}>
       <button ref={btn} type="button" aria-label="Close" onClick={onClose} className="absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full bg-white text-navy"><X size={22} /></button>
-      <img src={src} alt="Admission flyer, enlarged" className="lbi max-h-[90vh] max-w-full rounded-xl" onClick={(e) => e.stopPropagation()} />
+      <img src={src} alt={alt} className="lbi max-h-[90vh] max-w-full rounded-xl" onClick={(e) => e.stopPropagation()} />
     </div>
   );
 }
@@ -279,15 +295,16 @@ function Footer() {
 }
 
 export default function App() {
-  const [lb, setLb] = useState<string | null>(null);
+  const [lb, setLb] = useState<{ src: string; alt: string } | null>(null);
+  const open = useCallback((src: string, alt: string) => setLb({ src, alt }), []);
   const close = useCallback(() => setLb(null), []);
   return (
     <>
       <Navbar />
-      <main><Hero /><About /><Director /><Programs /><Why /><Facilities /><Admissions onOpen={setLb} /><Contact /></main>
+      <main><Hero /><About /><Director /><Programs /><Why /><Facilities onOpen={open} /><Admissions onOpen={open} /><Contact /></main>
       <Footer />
       <a href={SITE.waLink} target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp" className="wa"><MessageCircle size={28} /></a>
-      {lb && <Lightbox src={lb} onClose={close} />}
+      {lb && <Lightbox src={lb.src} alt={lb.alt} onClose={close} />}
     </>
   );
 }
